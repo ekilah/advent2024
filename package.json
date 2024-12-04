@@ -1,13 +1,20 @@
 {
-  "name": "${PROJECT_NAME}",
+  "name": "advent2024",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build:watch": "concurrently --kill-others \"tsc -w -p .\" \"tsc-alias -w\""
   },
-  "dependencies": {},
+  "dependencies": {
+    "ramda": "^0.30.1",
+    "ramda-adjunct": "^5.1.0"
+  },
   "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/ramda": "^0.30.2",
+    "concurrently": "^9.1.0",
+    "tsc-alias": "^1.8.10",
     "typescript": "^5.5.3"
   },
   "private": true
