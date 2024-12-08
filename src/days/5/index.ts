@@ -1,9 +1,8 @@
 import * as fs from 'fs'
 import * as R from 'ramda'
 import path from 'path'
-import {intersects} from 'utils/Set'
-import * as M from 'utils/Map'
-import * as S from 'utils/Set'
+import * as M from '../../utils/Map'
+import * as S from '../../utils/Set'
 
 // utils
 const EMPTY_SET = new Set()
@@ -54,7 +53,7 @@ const getBrokenListsAndMiddleNumberSum = (
     for(let pageIdx = 1; pageIdx < pageNumberList.length && !failed; pageIdx++) {
       const pageNum = pageNumberList[pageIdx]!
 
-      if (intersects(setOfNumbersBeforeCurrentIndex, ruleMap.get(pageNum) ?? EMPTY_SET)) {
+      if (S.intersects(setOfNumbersBeforeCurrentIndex, ruleMap.get(pageNum) ?? EMPTY_SET)) {
         failed = true
         foundBrokenLists.push(pageNumberList)
         break
