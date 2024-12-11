@@ -1,6 +1,7 @@
 import * as R from 'ramda'
 import fs from 'fs'
 import path from 'path'
+import {Grid, GridCoordinate, valueAtCoordinate} from '../../utils/Grid'
 
 /*
 
@@ -28,9 +29,6 @@ const VISITED_RIGHT = 0b0001
 const VISITED_DOWN =  0b0010
 const VISITED_LEFT =  0b0100
 const VISITED_UP =    0b1000
-
-type Grid = number[][]
-type GridCoordinate = {x: number, y: number, __tag: 'coordinate'}
 
 const RIGHT = {x: 1,  y: 0,  id: 'Right', char: '>'} as const
 const DOWN  = {x: 0,  y: 1,  id: 'Down',  char: 'v'} as const
@@ -68,14 +66,14 @@ const characterForGridSquare = (
 }
 
 const printGrid = (
-  grid: Grid,
+  grid: Grid<number>,
   showCursor?: {pos: GridCoordinate, orient: Orientation},
   obstacleAt?: GridCoordinate,
 ) => {
   for(let y = 0; y < grid.length; y++) {
     const row = grid[y]!
     console.log(row.map((val, x) => {
-      if (R.equals(obstacleAt, {x, y, __tag: 'coordinate'})) return 'O'
+      if (R.equals(obstacleAt, {x, y})) return 'O'
       return characterForGridSquare(val, {x, y}, showCursor)
     }).join(''))
   }
@@ -87,9 +85,6 @@ const rotateOrientation = (orientation: Orientation): Orientation => {
   const idx = orderedOrientations.indexOf(orientation)
   return orderedOrientations[(idx + 1) % orderedOrientations.length]!
 }
-
-const valueAtCoordinate = (grid: Grid, {x, y}: GridCoordinate) =>
-  grid[y]?.[x]
 
 const orientationToBool = (orientation: Orientation) => {
   switch (orientation) {
@@ -106,7 +101,7 @@ const orientationToBool = (orientation: Orientation) => {
   }
 }
 
-const markCoordinateAsVisitedInOrientation = (grid: Grid, position: GridCoordinate, orientation: Orientation) => {
+const markCoordinateAsVisitedInOrientation = (grid: Grid<number>, position: GridCoordinate, orientation: Orientation) => {
   const {x, y} = position
   grid[y]![x]! = valueAtCoordinate(grid, position)! | orientationToBool(orientation)
 }
@@ -115,7 +110,7 @@ const markCoordinateAsVisitedInOrientation = (grid: Grid, position: GridCoordina
 const nextCoordinate =  (position: GridCoordinate, orientation: Orientation): GridCoordinate =>
   ({...position, x: position.x + orientation.x, y: position.y + orientation.y})
 
-const valueInFrontOfPosition = (grid: Grid, position: GridCoordinate, orientation: Orientation) => {
+const valueInFrontOfPosition = (grid: Grid<number>, position: GridCoordinate, orientation: Orientation) => {
   return valueAtCoordinate(grid, nextCoordinate(position, orientation))
 }
 
@@ -124,7 +119,7 @@ class LoopDetectedError {}
 // mutates grid if we move
 // returns a new position or orientation, or undefined if we left the board
 const moveOrRotate = (
-  grid: Grid,
+  grid: Grid<number>,
   currentPosition: GridCoordinate,
   currentOrientation: Orientation,
   alreadyPlacedAnObstacle: boolean
@@ -194,7 +189,7 @@ const moveOrRotate = (
 }
 
 const moveUntilOffGrid = (
-  grid: Grid,
+  grid: Grid<number>,
   currentPosition: GridCoordinate,
   currentOrientation: Orientation,
   alreadyPlacedAnObstacle: boolean
@@ -225,12 +220,12 @@ let startingPosition: GridCoordinate | undefined
 let startingOrientation: Orientation | undefined
 
 // parse the input into our `Grid` data structure, and capture the starting pos/orientation
-const grid: Grid = rowsOfGrid.map((row, y) =>
+const grid: Grid<number> = rowsOfGrid.map((row, y) =>
   row.split('').map((square, x) => {
     if (square === '#') return OBSTACLE
     if (square === '.') return BLANK
 
-    startingPosition = {x, y, __tag: 'coordinate'}
+    startingPosition = {x, y}
     startingOrientation = ((): Orientation => {
       switch (square) {
         case 'v':

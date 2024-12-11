@@ -2,30 +2,12 @@ import fs from 'fs'
 import path from 'path'
 import {max} from 'ramda'
 import * as R from 'ramda'
-import {isInteger} from 'ramda-adjunct'
+import {Grid, gridBounds, GridCoordinate, isValidCoordinate} from '../../utils/Grid'
 import * as M from '../../utils/Map'
 
-type Grid = string[][]
-type GridCoordinate = {x: number, y: number}
-
-const printGrid = (
-  grid: Grid,
-) => {
-  for(let y = 0; y < grid.length; y++) {
-    const row = grid[y]!
-    console.log(row.join(''))
-  }
-  console.log('')
-}
-
 // the raw text from https://adventofcode.com/2024/day/8/input
-const grid: Grid = fs.readFileSync(path.join(__dirname, './adventOfCodeInput.txt'), 'utf8').split('\n').filter(R.identity).map(row => row.split(''))
-
-const maxX = grid[0]!.length - 1
-const maxY = grid.length - 1
-const isValidCoordinate = ({x, y}: GridCoordinate) => {
-  return x >= 0 && y >= 0 && isInteger(x) && isInteger(y) && x <= maxX && y <= maxY
-}
+const grid: Grid<string> = fs.readFileSync(path.join(__dirname, './adventOfCodeInput.txt'), 'utf8').split('\n').filter(R.identity).map(row => row.split(''))
+const {maxX, maxY} = gridBounds(grid)
 
 // printGrid(grid)
 const gridWithAntinodes = structuredClone(grid) // for pretty printing
@@ -72,7 +54,7 @@ const calculateAntinodes = (part: '1' | '2') => {
           {x: pointA.x + (n * xDelta), y: pointA.y + n*(yDelta)},
         ])).flat(1)
 
-      pointsOnSlope.filter(isValidCoordinate).forEach(anti => {
+      pointsOnSlope.filter(R.curry(isValidCoordinate)(grid)).forEach(anti => {
         antinodes.add(`${anti.x},${anti.y}`)
         if (gridWithAntinodes[anti.y]![anti.x]! === '.') gridWithAntinodes[anti.y]![anti.x]! = '#'
       })
