@@ -43,11 +43,22 @@ export const surroundingCoordinates = <T>(
 }
 
 export const printGrid = <T>(
-  grid: Grid<T>,
+  grid: Grid<T>
 ) => {
   for(let y = 0; y < grid.length; y++) {
     const row = grid[y]!
     console.log(row.join(''))
   }
   console.log('')
+}
+
+export const forEachGridCoordinate = <T>(
+  grid: Grid<T>,
+  callback: (value: T, coordinate: GridCoordinate) => void
+): void => {
+  grid.forEach((row, y) => {
+    row.forEach((value, x) => {
+      callback(value, {x, y})
+    })
+  })
 }

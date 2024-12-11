@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import {max} from 'ramda'
 import * as R from 'ramda'
-import {Grid, gridBounds, GridCoordinate, isValidCoordinate} from '../../utils/Grid'
+import {forEachGridCoordinate, Grid, gridBounds, GridCoordinate, isValidCoordinate} from '../../utils/Grid'
 import * as M from '../../utils/Map'
 
 // the raw text from https://adventofcode.com/2024/day/8/input
@@ -14,12 +14,10 @@ const gridWithAntinodes = structuredClone(grid) // for pretty printing
 
 // for every antenna type, collect the coordinates
 const antennas: Map<string, GridCoordinate[]> = new Map()
-grid.forEach((row, y) => {
-  row.forEach((value, x) => {
-    if (value === '.') return
-    const arr = antennas.get(value) ?? []
-    antennas.set(value, [...arr, {x, y}])
-  })
+forEachGridCoordinate(grid, (value, coordinate) => {
+  if (value === '.') return
+  const arr = antennas.get(value) ?? []
+  antennas.set(value, [...arr, coordinate])
 })
 
 // for every pair of antennae of the same key,

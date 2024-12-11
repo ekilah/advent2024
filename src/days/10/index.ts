@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import * as uuid from 'uuid'
-import {Grid, GridCoordinate, surroundingCoordinates, valueAtCoordinate} from '../../utils/Grid'
+import {forEachGridCoordinate, Grid, GridCoordinate, surroundingCoordinates, valueAtCoordinate} from '../../utils/Grid'
 import * as S from '../../utils/Set'
 
 const TRAIL_START = 0
@@ -13,11 +13,9 @@ type CoordinateString = `trailhead:${number},${number}::end:${number},${number}`
 const grid: Grid<number> = fs.readFileSync(path.join(__dirname, './adventOfCodeInput.txt'), 'utf8').split('\n').map(line => line.split('').map(Number))
 
 const trailheads: Set<GridCoordinate> = new Set()
-grid.forEach((row, y) => {
-  row.forEach((value, x) => {
-    if (value === TRAIL_START) trailheads.add({x, y})
-  })
-})
+forEachGridCoordinate(grid, (value, coordinate) =>
+  value === TRAIL_START && trailheads.add(coordinate)
+)
 
 const findNextStepsOfTrail = (coordinate: GridCoordinate): GridCoordinate[] => {
   const currentValue = valueAtCoordinate(grid, coordinate)!
