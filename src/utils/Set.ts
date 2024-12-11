@@ -1,3 +1,5 @@
+import * as R from 'ramda'
+
 /** Create a new Set from a given Set */
 export const clone = <V>(s: Set<V>): Set<V> => new Set(s)
 
@@ -40,6 +42,21 @@ export const last = <V>(s: Set<V>): V | undefined => {
 /** Sets are iterated in insertion order. This method returns the element of the Set at the specified array index. */
 export const atIndex = <V>(index: number, s: Set<V>): V | undefined => {
   return s.size > index && index >= 0 ? values(s)[index] : undefined
+}
+
+/**
+ *  Combine all given Set entries into one Set.
+ *  The order of the earliest Sets are preserved over the order of the later Sets.
+ */
+export const union = <T>(
+  ...sets: Set<T>[]
+): Set<T> => {
+  const allVals = R.reduce<Set<T>, T[]>(
+    (acc, nextSet) => acc.concat(values(nextSet)),
+    [],
+    sets
+  )
+  return new Set<T>(allVals)
 }
 
 /** Returns the intersection between two sets. The order of the first set is preserved. */
