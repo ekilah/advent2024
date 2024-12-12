@@ -3,15 +3,17 @@ import path from 'path'
 import * as R from 'ramda'
 import {compact} from '../../utils'
 
+// this approach is naive for part 2. but for part 1, it was doable.
+
 // the raw text from https://adventofcode.com/2024/day/11/input
 const inputListStrings: string[] = fs.readFileSync(path.join(__dirname, './adventOfCodeInput.txt'), 'utf8').split('\n')[0]!.split(' ')
 
-// full list of iterations in order of inputListStrings
+// full list of iterations per step for each stone in order of inputListStrings
 const evolutions: (string[][])[] = inputListStrings.map(v => [[v]])
 
 const evolve = (
   stone: string
-): [string, string?] => {
+): [string] | [string, string] => {
   if (stone === '0') {
     return ['1']
   } else if (stone.length % 2 === 0) {
@@ -41,4 +43,4 @@ inputListStrings.forEach((initialStone, stoneIdx) => {
   }, n)
 })
 
-console.log(evolutions.map(e => e[n]!).flat().length)
+console.log('part 1:', evolutions.map(e => e[n]!).flat().length)
