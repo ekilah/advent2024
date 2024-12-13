@@ -7,7 +7,7 @@ import * as S from '../../utils/Set'
 const TRAIL_START = 0
 const TRAIL_END = 9
 
-type CoordinateString = `trailhead:${number},${number}::end:${number},${number}` // two 'x,y' pairs
+type CoordinatePairString = `trailhead:${number},${number}::end:${number},${number}` // two 'x,y' pairs
 
 // the raw text from https://adventofcode.com/2024/day/10/input
 const grid: Grid<number> = fs.readFileSync(path.join(__dirname, './adventOfCodeInput.txt'), 'utf8').split('\n').map(line => line.split('').map(Number))
@@ -28,7 +28,7 @@ const solveForNthStepOfTrail = (part: '1' | '2', trailhead: GridCoordinate, coor
     // part 1: we only want to track unique trail start&ending pairs, so we use a Set to prune duplicates
     // part 2: we want to track every unique path to an ending, so circumvent uniqueness with UUIDs instead of using a different data structure
     if (part === '1') {
-      const val: CoordinateString = `trailhead:${trailhead.x},${trailhead.y}::end:${coordinate.x},${coordinate.y}`
+      const val: CoordinatePairString = `trailhead:${trailhead.x},${trailhead.y}::end:${coordinate.x},${coordinate.y}`
       return new Set([val])
     } else {
       return new Set([uuid.v4()])

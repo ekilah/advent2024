@@ -2,7 +2,15 @@ import fs from 'fs'
 import path from 'path'
 import {max} from 'ramda'
 import * as R from 'ramda'
-import {forEachGridCoordinate, Grid, gridBounds, GridCoordinate, isValidCoordinate} from '../../utils/Grid'
+import {
+  CoordinateString,
+  forEachGridCoordinate,
+  Grid,
+  gridBounds,
+  GridCoordinate,
+  isValidCoordinate,
+  toCoordinateString,
+} from '../../utils/Grid'
 import * as M from '../../utils/Map'
 
 // the raw text from https://adventofcode.com/2024/day/8/input
@@ -25,7 +33,7 @@ forEachGridCoordinate(grid, (value, coordinate) => {
 // to find the anitnodes
 
 const calculateAntinodes = (part: '1' | '2') => {
-  const antinodes: Set<`${number},${number}`> = new Set() // 'x,y'
+  const antinodes: Set<CoordinateString> = new Set() // 'x,y'
 
   M.forEachIndexed((coordinatesList, _antennaType) => {
     const pairs: [GridCoordinate, GridCoordinate][] = []
@@ -53,7 +61,7 @@ const calculateAntinodes = (part: '1' | '2') => {
         ])).flat(1)
 
       pointsOnSlope.filter(R.curry(isValidCoordinate)(grid)).forEach(anti => {
-        antinodes.add(`${anti.x},${anti.y}`)
+        antinodes.add(toCoordinateString(anti))
         if (gridWithAntinodes[anti.y]![anti.x]! === '.') gridWithAntinodes[anti.y]![anti.x]! = '#'
       })
     })

@@ -62,3 +62,13 @@ export const forEachGridCoordinate = <T>(
     })
   })
 }
+
+export type CoordinateString = `${number},${number}` // 'x,y'
+
+export const toCoordinateString = (coordinate: GridCoordinate): CoordinateString =>
+  `${coordinate.x},${coordinate.y}`
+
+export const fromCoordinateString = (coordinateString: CoordinateString): GridCoordinate => {
+  const [x, y] = coordinateString.split(',') as [string, string]
+  return {x: Number(x), y: Number(y)}
+}
