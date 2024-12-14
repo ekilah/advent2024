@@ -1,3 +1,4 @@
+import * as R from 'ramda'
 import {isInteger} from 'ramda-adjunct'
 
 export type Grid<T> = T[][]
@@ -92,4 +93,28 @@ export const mQuadrantForCoordinate = (gridSize: {width: number; height: number}
     return 3
   }
   return undefined
+}
+
+export const coordinatesToGrid = <T>(
+  coordinates: GridCoordinate[],
+  gridSize: {width: number; height: number},
+  defaultGridSquareValue: T,
+  buildValueForCoordinate: (
+    coordinate: GridCoordinate,
+    currentValueAtCoordinate: T,
+    coordinateIndex: number
+  ) => T,
+): Grid<T> => {
+  const grid: Grid<T> = []
+  grid.push(...R.times<T[]>(() => R.repeat(defaultGridSquareValue, gridSize.width), gridSize.height))
+
+  coordinates.forEach((c, idx) => {
+    if (isValidCoordinate(grid, c)) {
+      grid[c.y]![c.x] = buildValueForCoordinate(c, valueAtCoordinate(grid, c)!, idx)
+    } else {
+      throw new Error(`invalid coordinate ${c.x},${c.y}`)
+    }
+  })
+
+  return grid
 }

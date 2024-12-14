@@ -2,11 +2,15 @@ import fs from 'fs'
 import path from 'path'
 import * as R from 'ramda'
 import {compact} from 'utils'
-import {GridCoordinate, mQuadrantForCoordinate} from '../../utils/Grid'
+import {coordinatesToGrid, GridCoordinate, mQuadrantForCoordinate, printGrid} from '../../utils/Grid'
 import * as M from '../../utils/Map'
 
+const sample = false
+const width = sample ? 11 : 101
+const height = sample ? 7 : 103
+
 // the raw text from https://adventofcode.com/2024/day/14/input
-const inputRows: string[] = compact(fs.readFileSync(path.join(__dirname, './adventOfCodeInput.txt'), 'utf8').split('\n'))
+const inputRows: string[] = compact(fs.readFileSync(path.join(__dirname, sample ? './adventOfCodeInput.sample.txt' : './adventOfCodeInput.txt'), 'utf8').split('\n'))
 
 type RobotConfig = {
   startingPosition: GridCoordinate
@@ -28,28 +32,56 @@ const robotConfigs: RobotConfig[] = inputRows.map(r => {
   }
 })
 
-const sample = false
-const width = sample ? 11 : 101
-const height = sample ? 7 : 103
-
-const steps = 100
+const part1Steps = 100
 
 const addThisIfNegative = (addThis: number, maybeNegative: number) => {
   return maybeNegative < 0 ? addThis + maybeNegative : maybeNegative
 }
 
-const endingPositions: GridCoordinate[] = robotConfigs.map(rc => {
-  const {startingPosition: {x, y}, velocity: {dx, dy}} = rc
+const endingPositions = (steps: number): GridCoordinate[] =>
+  robotConfigs.map(rc => {
+    const {startingPosition: {x, y}, velocity: {dx, dy}} = rc
 
-  return {
-    x: addThisIfNegative(width, (dx * steps + x) % width),
-    y: addThisIfNegative(height, (dy * steps + y) % height),
-  }
-})
+    return {
+      x: addThisIfNegative(width, (dx * steps + x) % width),
+      y: addThisIfNegative(height, (dy * steps + y) % height),
+    }
+  })
 
 const quadrantPopulations = (positions: GridCoordinate[]): number[] => {
-  const quadrants = M.groupBy(R.identity, positions.map(c => mQuadrantForCoordinate({width, height}, c)).filter(mQuad => mQuad !== undefined))
+  const quadrants = M.groupBy(
+    R.identity,
+    positions
+      .map(c => mQuadrantForCoordinate({width, height}, c))
+      .filter(mQuad => mQuad !== undefined))
   return M.values(quadrants).map(list => list.length)
 }
 
-console.log('part 1:', R.reduce(R.multiply, 1, quadrantPopulations(endingPositions)))
+console.log('part 1:', R.reduce(R.multiply, 1, quadrantPopulations(endingPositions(part1Steps))))
+
+let part2Step = 6620 // my solution was here in the end
+
+// scroll through each step with keypresses in the console
+// https://github.com/TooTallNate/keypress
+const keypress = require('keypress')
+keypress(process.stdin);
+process.stdin.on('keypress', function (ch, key) {
+  if (key && key.ctrl && key.name == 'c') {
+    process.stdin.pause()
+    return
+  }
+
+  console.log(`step ${part2Step}`)
+  printGrid(coordinatesToGrid<string>(
+    endingPositions(part2Step),
+    {width, height},
+    ' ',
+    (c, current) => `${current === ' ' ? 1 : (+current + 1)}`
+  ))
+
+  // noticed there are patterns at these intervals after some manual ++ keypress labor
+  // part2Step += 103
+  part2Step+=101
+})
+process.stdin.setRawMode(true);
+process.stdin.resume();
