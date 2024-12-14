@@ -61,16 +61,12 @@ console.log('part 1:', R.reduce(R.multiply, 1, quadrantPopulations(endingPositio
 
 let part2Step = 6620 // my solution was here in the end
 
-// scroll through each step with keypresses in the console
-// https://github.com/TooTallNate/keypress
-const keypress = require('keypress')
-keypress(process.stdin);
-process.stdin.on('keypress', function (ch, key) {
-  if (key && key.ctrl && key.name == 'c') {
-    process.stdin.pause()
-    return
-  }
-
+// press a key to advance the step counter
+// from https://stackoverflow.com/a/12506613
+process.stdin.setEncoding( 'utf8' );
+process.stdin.on('data', function (key: string) {
+  if (key == '\u0003') { process.exit(); }    // ctrl-c
+  console.log(key)
   console.log(`step ${part2Step}`)
   printGrid(coordinatesToGrid<string>(
     endingPositions(part2Step),
