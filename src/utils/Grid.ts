@@ -72,3 +72,24 @@ export const fromCoordinateString = (coordinateString: CoordinateString): GridCo
   const [x, y] = coordinateString.split(',') as [string, string]
   return {x: Number(x), y: Number(y)}
 }
+
+// returns `undefined` if the coordinate is on one of the axes in the middle of the grid (for odd-axis'd grids)
+// (which some puzzles say to do, oddly.)
+// 0 is top left, 1 is top right, 2 is bottom right, 3 is bottom left (clockwise)
+export const mQuadrantForCoordinate = (gridSize: {width: number; height: number}, coordinate: GridCoordinate): 0 | 1 | 2 | 3 | undefined => {
+  // if these are integers, the axis size was odd, which means there's a "gap" to skip in the middle of the axis.
+  // if they are N.5, then the axis size was even, which means there's no "gap" to skip.
+  const midX = (gridSize.width - 1) / 2
+  const midY = (gridSize.height - 1) / 2
+
+  if (coordinate.x < midX && coordinate.y < midY) {
+    return 0
+  } else if (coordinate.x > midX && coordinate.y < midY) {
+    return 1
+  } else if (coordinate.x > midX && coordinate.y > midY) {
+    return 2
+  } else if (coordinate.x < midX && coordinate.y > midY) {
+    return 3
+  }
+  return undefined
+}
