@@ -2,6 +2,15 @@ import * as R from 'ramda'
 import fs from 'fs'
 import path from 'path'
 import {Grid, GridCoordinate, valueAtCoordinate} from '../../utils/Grid'
+import {
+  GridOrientation,
+  RIGHT,
+  DOWN,
+  LEFT,
+  UP,
+  arrowCharToOrientation,
+  GridOrientationChar, nextCoordinateTowardsOrientation, rotateRight
+} from '../../utils/GridOrientation'
 
 /*
 
@@ -30,24 +39,10 @@ const VISITED_DOWN =  0b0010
 const VISITED_LEFT =  0b0100
 const VISITED_UP =    0b1000
 
-const RIGHT = {x: 1,  y: 0,  id: 'Right', char: '>'} as const
-const DOWN  = {x: 0,  y: 1,  id: 'Down',  char: 'v'} as const
-const LEFT  = {x: -1, y: 0,  id: 'Left',  char: '<'} as const
-const UP    = {x: 0,  y: -1, id: 'Up',    char: '^'} as const
-
-type Orientation =
-  | typeof RIGHT
-  | typeof DOWN
-  | typeof LEFT
-  | typeof UP
-
-// turning right between each
-const orderedOrientations: Orientation[] = [RIGHT, DOWN, LEFT, UP]
-
 const characterForGridSquare = (
   value: number,
   {x, y}: {x: number, y: number},
-  showCursorAt?: {pos: GridCoordinate, orient: Orientation}
+  showCursorAt?: {pos: GridCoordinate, orient: GridOrientation}
 ) => {
   if (showCursorAt && x === showCursorAt?.pos.x &&  y === showCursorAt?.pos.y) {
     return showCursorAt.orient.char
@@ -67,7 +62,7 @@ const characterForGridSquare = (
 
 const printGrid = (
   grid: Grid<number>,
-  showCursor?: {pos: GridCoordinate, orient: Orientation},
+  showCursor?: {pos: GridCoordinate, orient: GridOrientation},
   obstacleAt?: GridCoordinate,
 ) => {
   for(let y = 0; y < grid.length; y++) {
@@ -80,13 +75,7 @@ const printGrid = (
   console.log('')
 }
 
-// turn right
-const rotateOrientation = (orientation: Orientation): Orientation => {
-  const idx = orderedOrientations.indexOf(orientation)
-  return orderedOrientations[(idx + 1) % orderedOrientations.length]!
-}
-
-const orientationToBool = (orientation: Orientation) => {
+const orientationToBool = (orientation: GridOrientation) => {
   switch (orientation) {
     case RIGHT:
       return VISITED_RIGHT
@@ -101,17 +90,9 @@ const orientationToBool = (orientation: Orientation) => {
   }
 }
 
-const markCoordinateAsVisitedInOrientation = (grid: Grid<number>, position: GridCoordinate, orientation: Orientation) => {
+const markCoordinateAsVisitedInOrientation = (grid: Grid<number>, position: GridCoordinate, orientation: GridOrientation) => {
   const {x, y} = position
   grid[y]![x]! = valueAtCoordinate(grid, position)! | orientationToBool(orientation)
-}
-
-// the next coordinate if we were to move forward towards the given orientation
-const nextCoordinate =  (position: GridCoordinate, orientation: Orientation): GridCoordinate =>
-  ({...position, x: position.x + orientation.x, y: position.y + orientation.y})
-
-const valueInFrontOfPosition = (grid: Grid<number>, position: GridCoordinate, orientation: Orientation) => {
-  return valueAtCoordinate(grid, nextCoordinate(position, orientation))
 }
 
 class LoopDetectedError {}
@@ -121,15 +102,15 @@ class LoopDetectedError {}
 const moveOrRotate = (
   grid: Grid<number>,
   currentPosition: GridCoordinate,
-  currentOrientation: Orientation,
+  currentOrientation: GridOrientation,
   alreadyPlacedAnObstacle: boolean
-): undefined | {newPosition: GridCoordinate; newOrientation: Orientation, obstacleInFrontWouldHaveProducedALoop: boolean} => {
-  const positionInFrontOfMe = nextCoordinate(currentPosition, currentOrientation)
+): undefined | {newPosition: GridCoordinate; newOrientation: GridOrientation, obstacleInFrontWouldHaveProducedALoop: boolean} => {
+  const positionInFrontOfMe = nextCoordinateTowardsOrientation(currentPosition, currentOrientation)
   const valueInFrontOfMe = valueAtCoordinate(grid, positionInFrontOfMe)
 
   if (valueInFrontOfMe === OBSTACLE) {
     // rotate, but first mark ourselves as turning at the current position
-    const newOrientation = rotateOrientation(currentOrientation)
+    const newOrientation = rotateRight(currentOrientation)
     markCoordinateAsVisitedInOrientation(grid, currentPosition, newOrientation)
     return {
       newPosition: currentPosition,
@@ -175,10 +156,10 @@ const moveOrRotate = (
 
     // if (obstacleInFrontWouldHaveProducedALoop) {
     //   console.log('obstacleInFrontWouldHaveProducedALoop')
-    //   printGrid(grid, {pos: currentPosition, orient: currentOrientation}, nextCoordinate(currentPosition, currentOrientation))
+    //   printGrid(grid, {pos: currentPosition, orient: currentOrientation}, nextCoordinateTowardsOrientation(currentPosition, currentOrientation))
     // }
 
-    const newPosition= nextCoordinate(currentPosition, currentOrientation)
+    const newPosition= nextCoordinateTowardsOrientation(currentPosition, currentOrientation)
     markCoordinateAsVisitedInOrientation(grid, newPosition, currentOrientation)
     return {
       newPosition,
@@ -191,7 +172,7 @@ const moveOrRotate = (
 const moveUntilOffGrid = (
   grid: Grid<number>,
   currentPosition: GridCoordinate,
-  currentOrientation: Orientation,
+  currentOrientation: GridOrientation,
   alreadyPlacedAnObstacle: boolean
 ): {
   numberOfStepsTaken: number
@@ -217,7 +198,7 @@ const moveUntilOffGrid = (
 const rowsOfGrid = fs.readFileSync(path.join(__dirname, './adventOfCodeInput.txt'), 'utf8').split('\n')
 
 let startingPosition: GridCoordinate | undefined
-let startingOrientation: Orientation | undefined
+let startingOrientation: GridOrientation | undefined
 
 // parse the input into our `Grid` data structure, and capture the starting pos/orientation
 const grid: Grid<number> = rowsOfGrid.map((row, y) =>
@@ -226,20 +207,7 @@ const grid: Grid<number> = rowsOfGrid.map((row, y) =>
     if (square === '.') return BLANK
 
     startingPosition = {x, y}
-    startingOrientation = ((): Orientation => {
-      switch (square) {
-        case 'v':
-          return DOWN
-        case '<':
-          return LEFT
-        case '^':
-          return UP
-        case '>':
-          return RIGHT
-        default:
-          throw new Error("Square was not an expected value")
-      }
-    })()
+    startingOrientation = arrowCharToOrientation(square as GridOrientationChar)
     return orientationToBool(startingOrientation) // count the starting position as visited!
   })
 )

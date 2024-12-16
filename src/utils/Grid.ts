@@ -19,6 +19,10 @@ export const isValidCoordinate = (grid: Grid<unknown>, {x, y}: GridCoordinate): 
 export const valueAtCoordinate = <T>(grid: Grid<T>, {x, y}: GridCoordinate): T | undefined =>
   grid[y]?.[x]
 
+export const setValueAtCoordinate = <T>(grid: Grid<T>, {x, y}: GridCoordinate, value: T): void => {
+  grid[y]![x] = value
+}
+
 export const surroundingCoordinates = <T>(
   grid: Grid<T>,
   {x, y}: GridCoordinate,
@@ -117,4 +121,20 @@ export const coordinatesToGrid = <T>(
   })
 
   return grid
+}
+
+export const findInGrid = <T>(
+  grid: Grid<T>,
+  predicate: (value: T, coordinate: GridCoordinate) => boolean
+): {value: T; coordinate: GridCoordinate} | undefined => {
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[y]!.length; x++) {
+      const value = grid[y]![x]!;
+      const mFound = predicate(value, {x, y})
+      if (mFound) {
+        return {value, coordinate: {x, y}}
+      }
+    }
+  }
+  return undefined
 }
