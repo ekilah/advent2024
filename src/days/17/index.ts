@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import * as R from 'ramda'
 
 type TRegisters = {
   a: number
@@ -55,7 +56,9 @@ const runInstruction = (
       a = Math.trunc(a / Math.pow(2, valueOfComboOperand(operand, currentRegisters)))
       break
     case 1:
-      b = b ^ operand
+      // BigInt is necessary for part 2 because JS's XOR does 32-bit operations
+      // on regular numbers, for whatever reason, and part 2's numbers get large
+      b = Number(BigInt(b) ^ BigInt(operand))
       break
     case 2:
       b = valueOfComboOperand(operand, currentRegisters) % 8
@@ -66,7 +69,7 @@ const runInstruction = (
       }
       break
     case 4:
-      b = b ^ c
+      b =  Number(BigInt(b) ^ BigInt(c))
       break
     case 5:
       output = valueOfComboOperand(operand, currentRegisters) % 8
@@ -116,3 +119,71 @@ const part1 = () => {
 
   console.log('part 1:', outputs.join(','))
 }
+
+part1()
+
+const part2 = () => {
+  let initialA = 0
+  let topOutputMatchCount = 0
+  let hexIncrementer = 0
+
+  while (true) {
+    let instructionPointer = 0
+    let outputs: number[] = []
+
+    // I brute-forced my way for quite a long time through lower-value As,
+    // leaving that running while I watched TV and tried to figure out the pattern.
+    // As the output got closer (ish) to the desired program, I started
+    // looking for patterns in the A values that were producing longer matching outputs.
+    // This was taking forever and the patterns I was seeing weren't leading me to answers.
+    //
+    // At a certain point, I finally looked for hints and realized that each "closer"
+    // answer I was observing was adding bits to the front of a _hex_ number. I had been
+    // observing them in decimal. Observing these for patterns was on the right track,
+    // given I had settled on brute forcing it, but not in decimal :(
+    //
+    // I also should have realized earlier that the computer we implemented here was doing
+    // math on 3 bits at a time, and the bit shifting right the program does in a loop
+    // means only the top bits of the starting A value affect the later outputs.
+    //
+    // By then, I realized my somewhat-optimized* brute forcing had settled on several hex
+    // digits already. Starting from that closer point, knowing I only need a little more work
+    // at the left of the hex number I'd come up with so far, I could just see patterns emerge
+    // and update my starting point/lower digits and restart the program.
+
+    // *via a few rounds of the patterns I'd noticed, I was e.g. testing every 1,048,576th number
+    // (with an offset) for a bit, and then 4,194,304th, which I only later realized were
+    // 0x100000 and 0x400000 -_-)
+
+    // I didn't start this far down, but this is the gist:
+    // initialA = Number('0x' + ((hexIncrementer).toString(16)+'2a2a')) // notice '68' is part of the solution
+    // initialA = Number('0x' + ((hexIncrementer).toString(16)+'682a2a')) // notice a24 is part of the solution
+    initialA = Number('0x' + ((hexIncrementer).toString(16)+'a24682a2a'))
+    hexIncrementer += 1
+
+    let registers = {...initialRegisters, a: initialA}
+
+    while (instructionPointer < program.length - 1 && R.equals(outputs, program.slice(0, outputs.length))) {
+      const result = runInstruction(
+        registers,
+        instructionPointer,
+        {opcode: program[instructionPointer]!, operand: program[instructionPointer + 1]!}
+      )
+      registers = result.registers
+      instructionPointer = result.instructionPointer
+      result.output !== undefined && outputs.push(result.output)
+    }
+
+    if (R.equals(outputs, program)) {
+      break
+    } else {
+      if (outputs.length > 8 && outputs.length >= topOutputMatchCount) {
+        console.log('Equally or better match found at A=', initialA.toString(16), ': ', outputs)
+        topOutputMatchCount = Math.max(outputs.length, topOutputMatchCount)
+      }
+    }
+  }
+  console.log('part 2:', initialA)
+}
+
+part2()
