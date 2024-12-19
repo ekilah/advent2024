@@ -104,3 +104,10 @@ export const groupBy = <K, V>(
 
   return m
 }
+
+export const clone = <K, V>(m: Map<K, V>): Map<K, V> => new Map(m)
+
+/** Sets the given key/value on a `clone` of the given Map. Unlike Map.prototype.set(), this doesn't mutate the Map. */
+export const set = <K, V>(key: K, value: V, m: Map<K, V>): Map<K, V> => {
+  return clone(m).set(key, value)
+}

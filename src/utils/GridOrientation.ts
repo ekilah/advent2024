@@ -38,12 +38,54 @@ export const valueInFrontOfCoordinate = <T>(grid: Grid<T>, position: GridCoordin
   return valueAtCoordinate(grid, nextCoordinateTowardsOrientation(position, orientation))
 }
 
+// "left" is relative to the orientation
+export const coordinateToLeftOfCoordinateWithOrientation = (
+  {x, y}: GridCoordinate,
+  orientation: GridOrientation,
+): GridCoordinate => {
+  switch (orientation.char) {
+    case '^':
+      return {x: x - 1, y}
+    case '>':
+      return {x, y: y - 1}
+    case 'v':
+      return {x: x + 1, y}
+    case '<':
+      return {x, y: y + 1}
+  }
+}
+
+// "right" is relative to the orientation
+export const coordinateToRightOfCoordinateWithOrientation = (
+  {x, y}: GridCoordinate,
+  orientation: GridOrientation,
+): GridCoordinate => {
+  switch (orientation.char) {
+    case '^':
+      return {x: x + 1, y}
+    case '>':
+      return {x, y: y + 1}
+    case 'v':
+      return {x: x - 1, y}
+    case '<':
+      return {x, y: y - 1}
+  }
+}
+
 // turning right between each
 const orderedOrientations: GridOrientation[] = [RIGHT, DOWN, LEFT, UP]
 
 export const rotateRight = (orientation: GridOrientation): GridOrientation => {
   const idx = orderedOrientations.indexOf(orientation)
   return orderedOrientations[(idx + 1) % orderedOrientations.length]!
+}
+export const rotateBackwards = (orientation: GridOrientation): GridOrientation => {
+  const idx = orderedOrientations.indexOf(orientation)
+  return orderedOrientations[(idx + 2) % orderedOrientations.length]!
+}
+export const rotateLeft = (orientation: GridOrientation): GridOrientation => {
+  const idx = orderedOrientations.indexOf(orientation)
+  return orderedOrientations[(idx + 3) % orderedOrientations.length]!
 }
 
 // excludes `position`. in order from closest to `position` to furthest from it.

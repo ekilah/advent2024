@@ -48,10 +48,11 @@ export const surroundingCoordinates = <T>(
 }
 
 export const printGrid = <T>(
-  grid: Grid<T>
+  grid: Grid<T>,
+  overrideCharacter?: (c: GridCoordinate, v: T) => T,
 ) => {
   for(let y = 0; y < grid.length; y++) {
-    const row = grid[y]!
+    const row = grid[y]!.map((v, x) => overrideCharacter?.({x, y}, v) ?? v)
     console.log(row.join(''))
   }
   console.log('')
